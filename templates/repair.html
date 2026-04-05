@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RMA Dashboard | We Repair BD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('ez_theme') || 'light');
+        function toggleTheme() {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('ez_theme', next);
+        }
+    </script>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left-spacer"></div>
+
+        <div class="logo-area">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="We Repair BD Logo">
+            <div class="logo-text">
+                <h1>WE REPAIR BD</h1>
+                <p>Technician Fulfillment Portal</p>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <a href="/repair-logout" class="btn btn-logout">Tech Logout</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon"></button>
+        </div>
+    </header>
+
+    <main>
+        <div class="panel admin-panel active">
+            <div class="section-header">
+                <h2>Assigned Devices</h2>
+                <p>Update repair status and add technician notes</p>
+            </div>
+            <div id="repairRecordsList">
+                <div class="empty-state"><span class="spinner"></span>
+                    <p>Fetching assigned devices...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="techModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Update Device Status</h3>
+                <div class="close-btn" onclick="closeModal()">✕</div>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="{{ url_for('static', filename='js/repair.js') }}"></script>
+</body>
+
+</html>

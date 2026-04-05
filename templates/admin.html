@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ez Gadgets RMA | Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        const savedTheme = localStorage.getItem('ez_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('ez_theme', next);
+            document.getElementById('themeIcon').innerText = next === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left-spacer"></div>
+
+        <div class="logo-area">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Ez Gadgets Logo">
+            <div class="logo-text">
+                <h1>EZ GADGETS</h1>
+                <p>Admin Management Console</p>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <a href="/logout" class="btn btn-logout">Admin Logout</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon"></button>
+        </div>
+    </header>
+    <script>document.getElementById('themeIcon').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';</script>
+
+    <nav>
+        <div class="tab active" onclick="switchTab('all')">All Records</div>
+        <div class="tab" onclick="switchTab('search')">Search</div>
+        <div class="tab" onclick="switchTab('setup')">Settings</div>
+    </nav>
+
+    <main>
+        <div class="panel admin-panel active" id="panel-all">
+            <div class="section-header">
+                <h2>Warranty Overview</h2>
+                <p>Real-time statistics across all branches</p>
+            </div>
+
+            <div class="stats-row" id="statsRow">
+                <div class="stat-card">
+                    <div class="sv" id="stat-total">0</div>
+                    <div class="sl">Total Tickets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="sv" id="stat-pending">0</div>
+                    <div class="sl">Active Repairs</div>
+                </div>
+            </div>
+
+            <div id="allRecordsList">
+                <div class="empty-state"><span class="spinner"></span>
+                    <p>Fetching database...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel admin-panel" id="panel-search">
+            <div class="section-header">
+                <h2>Universal Search</h2>
+                <p>Search by Customer Name, Phone, or RMA ID</p>
+            </div>
+            <div class="form-group full">
+                <input type="text" id="adminSearchQuery" placeholder="Search anything..." onkeyup="filterRecords()">
+            </div>
+            <div id="searchResults" style="margin-top: 24px;"></div>
+        </div>
+
+        <div class="panel admin-panel" id="panel-setup">
+            <div class="section-header">
+                <h2>Admin Configuration</h2>
+                <p>Internal system settings</p>
+            </div>
+            <div
+                style="background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center;">
+                <h3 style="font-size: 16px; color: var(--text); margin-bottom: 8px;">Store Branches</h3>
+                <p style="color: var(--text2); font-size: 14px; margin-bottom: 24px;">Active Branches: <strong>Badda,
+                        Multiplan, CTG</strong></p>
+                <button class="btn btn-secondary"
+                    onclick="showToast('Branch settings are hardcoded in the backend.', 'info')">Manage
+                    Branches</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Manage Ticket</h3>
+                <div class="close-btn" onclick="closeModal()">✕</div>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+
+</html>
