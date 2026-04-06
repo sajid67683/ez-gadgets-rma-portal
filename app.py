@@ -11,32 +11,28 @@ app = Flask(__name__)
 # --- CONFIGURATION ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ezgadgets_rma.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'ez-gadgets-super-secret-key-change-later'
+app.config['SECRET_KEY'] = 'ez-gadgets-rma-91716493987'
 db = SQLAlchemy(app)
 
+
 # --- DATABASE MODEL ---
-
-
 class RMARecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rma_code = db.Column(db.String(20), unique=True, nullable=False)
     date_received = db.Column(db.DateTime, default=datetime.utcnow)
     location = db.Column(db.String(50), nullable=False)
-
     customer_name = db.Column(db.String(100), nullable=False)
     contact = db.Column(db.String(50), nullable=False)
     address = db.Column(db.String(250))
-
     product_name = db.Column(db.String(100), nullable=False)
     serial_number = db.Column(db.String(100))
     issue = db.Column(db.Text, nullable=False)
-
     status = db.Column(db.String(50), default="Pending Drop-off")
     repair_location = db.Column(db.String(100), default="In-House")
     admin_notes = db.Column(db.Text, default="")
 
-# --- HELPER FUNCTION ---
 
+# --- HELPER FUNCTION ---
 
 def generate_rma_code(location):
     if "Badda" in location:
@@ -45,16 +41,15 @@ def generate_rma_code(location):
         prefix = "EZ-MLT"
     else:
         prefix = "EZ-CTG"
-
     date_str = datetime.now().strftime("%y%m%d")
     random_chars = ''.join(random.choices(
         string.ascii_uppercase + string.digits, k=4))
     return f"{prefix}-{date_str}-{random_chars}"
 
+
 # ==========================================
 # PAGE ROUTES & AUTHENTICATION
 # ==========================================
-
 
 @app.route('/')
 def customer_portal():
@@ -85,19 +80,17 @@ def admin_dashboard():
         return redirect(url_for('login'))
     return render_template('admin.html')
 
+
 # ==========================================
 # CUSTOMER API ENDPOINTS
 # ==========================================
 
-
 @app.route('/api/rma/create', methods=['POST'])
 def create_rma():
     data = request.json
-
     # 1. Generate RMA Code based on selected branch
     branch_location = data.get('location', 'CTG Branch')
     new_code = generate_rma_code(branch_location)
-
     # 2. Create the Database Record
     # Note: Mapping JS keys (customerName) to DB keys (customer_name)
     new_rma = RMARecord(
@@ -110,12 +103,10 @@ def create_rma():
         serial_number=data.get('serialNumber'),
         issue=data.get('issue')
     )
-
     try:
         # 3. Save to Local SQLite Database
         db.session.add(new_rma)
         db.session.commit()
-
         # 4. Sync to Google Sheets
         # This sends all data including the address to your Apps Script
         requests.get(GOOGLE_SCRIPT_URL, params={
@@ -130,12 +121,10 @@ def create_rma():
             'issue': new_rma.issue,
             'address': new_rma.address  # Included as requested
         }, timeout=5)
-
         return jsonify({
             "success": True,
             "rma_code": new_code
         })
-
     except Exception as e:
         db.session.rollback()
         print(f"CRITICAL ERROR: {e}")
@@ -158,10 +147,10 @@ def check_status(code):
         })
     return jsonify({"success": False, "error": "RMA not found."}), 404
 
+
 # ==========================================
 # ADMIN API ENDPOINTS
 # ==========================================
-
 
 @app.route('/api/admin/rma/all', methods=['GET'])
 def get_all_rmas():
@@ -187,14 +176,12 @@ def get_all_rmas():
 def update_rma():
     data = request.json
     record = RMARecord.query.filter_by(rma_code=data.get('rma_code')).first()
-
     if record:
         record.status = data.get('status', record.status)
         record.repair_location = data.get(
             'repair_location', record.repair_location)
         record.admin_notes = data.get('admin_notes', record.admin_notes)
         db.session.commit()
-
         # DYNAMIC SYNC TO GOOGLE SHEET
         try:
             requests.get(GOOGLE_SCRIPT_URL, params={
@@ -205,14 +192,13 @@ def update_rma():
             }, timeout=5)
         except Exception as e:
             print(f"Google Update Error: {e}")
-
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Record not found."}), 404
 
-# ==========================================
-# TECHNICIAN (REPAIR GUY) ROUTES
-# ==========================================
 
+# ==========================================
+# TECHNICIAN (WE REPAIR BD) ROUTES
+# ==========================================
 
 @app.route('/repair-login', methods=['GET', 'POST'])
 def repair_login():
@@ -247,20 +233,20 @@ def get_repair_rmas():
     """Pulls ONLY the records assigned to 'We Repair BD'. Hides customer data."""
     if not session.get('repair_logged_in'):
         return jsonify({"success": False, "error": "Unauthorized"}), 401
-
     records = RMARecord.query.filter_by(repair_location="We Repair BD").order_by(
         RMARecord.date_received.desc()).all()
-
     result = []
     for r in records:
         result.append({
             "rma_code": r.rma_code,
-            # Notice: customer_name, contact, and address are intentionally left out!
             "product_name": r.product_name,
             "serial_number": r.serial_number,
             "issue": r.issue,
             "status": r.status,
-            "date": r.date_received.strftime("%d/%m/%Y")
+            "date": r.date_received.strftime("%d/%m/%Y"),
+            "customer_name": r.customer_name, 
+            "contact": r.contact,             
+            "address": r.address
         })
     return jsonify({"success": True, "records": result})
 
@@ -270,16 +256,13 @@ def update_repair_rma():
     data = request.json
     record = RMARecord.query.filter_by(rma_code=data.get(
         'rma_code'), repair_location="We Repair BD").first()
-
     if record:
         record.status = data.get('status', record.status)
         tech_note = data.get('tech_notes', '').strip()
         if tech_note:
             timestamp = datetime.now().strftime("%d/%m %H:%M")
             record.admin_notes = f"{record.admin_notes}\n[{timestamp} Tech]: {tech_note}"
-
         db.session.commit()
-
         # DYNAMIC SYNC TO GOOGLE SHEET
         try:
             requests.get(GOOGLE_SCRIPT_URL, params={
@@ -290,7 +273,6 @@ def update_repair_rma():
             }, timeout=5)
         except Exception as e:
             print(f"Google Update Error: {e}")
-
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Not found"}), 404
 

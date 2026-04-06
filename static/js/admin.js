@@ -44,10 +44,12 @@ async function loadAllData() {
 }
 
 function renderStats(records) {
+  // 1. Total Tickets (counts everything)
   document.getElementById("stat-total").innerText = records.length;
-  // Updated to exclude 'Replaced' from pending count
+  
+  // 2. Active Repairs (counts ONLY tickets with "Repair" in the status)
   document.getElementById("stat-pending").innerText = records.filter(
-    (r) => r.status !== "Replaced",
+    (r) => r.status && r.status.includes("Repair")
   ).length;
 }
 
@@ -58,12 +60,14 @@ function renderTable(records, containerId) {
     return;
   }
 
+  // ADDED: The "Details" header column to keep alignment perfect
   let html = `<div style="overflow-x: auto;"><table class="records-table">
         <thead>
             <tr>
                 <th>Code & Branch</th>
-                <th>Customer</th>
-                <th>Product</th>
+                <th style="white-space: nowrap; min-width: 100px;">Customer</th>
+                <th style="white-space: nowrap; min-width: 100px;">Product</th>
+                <th>Details</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
@@ -71,6 +75,7 @@ function renderTable(records, containerId) {
         <tbody>`;
 
   records.forEach((r) => {
+    // ADDED: The Eye Icon column with exact matching variables: r.customer_name and r.contact
     html += `
             <tr>
                 <td>
@@ -79,9 +84,18 @@ function renderTable(records, containerId) {
                 </td>
                 <td>
                     <div style="font-weight:600">${r.customer_name}</div>
-                    <div style="font-size: 12px; color: var(--text2);">${r.contact}</div>
                 </td>
                 <td>${r.product_name}</td>
+                
+                <td class="details-col" style="text-align: center;">
+                    <button class="eye-btn" onclick="viewCustomer('${r.customer_name || ""}', '${r.contact || ""}', '${r.address || ""}')" title="View Customer Details">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </td>
+
                 <td><span class="badge ${getStatusBadgeClass(r.status)}">${r.status}</span></td>
                 <td>
                     <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick='openAdminDetail(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Manage</button>
@@ -169,7 +183,6 @@ function openAdminDetail(r) {
                 <textarea id="upNotes" placeholder="Parts needed, cost estimates...">${r.admin_notes || ""}</textarea>
             </div>
         </div>
-
         <div class="btn-group">
             <button class="btn btn-primary" onclick="updateStatus('${r.rma_code}')">Save Updates</button>
             <button class="btn btn-secondary" onclick='printFromAdmin(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Print Receipt</button>
@@ -222,113 +235,220 @@ function showToast(msg, type = "info") {
 // --- PDF Generation (Ultra-Minimal / High-End Layout) ---
 function printFromAdmin(r) {
   try {
-    // 1. Check if the library is actually loaded
     if (!window.jspdf) {
-      alert(
-        "Error: jsPDF library not loaded. Please add the script tag to your HTML.",
-      );
+      alert("Error: jsPDF library not loaded.");
       return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
+    // --- NEW: Draw the Background First ---
+    // A4 paper size is 210mm x 297mm
+    const bgImg = document.getElementById("pdf-bg");
+    if (bgImg) {
+      // Stretches the image over the entire page
+      doc.addImage(bgImg, "PNG", 0, 0, 210, 297);
+    }
+
     const drawSection = (yOffset, label) => {
-      const leftMargin = 20;
+      const leftCol = 20;
+      const rightCol = 110;
       const rightMargin = 190;
-      const midPoint = 105;
 
-      // Header
+      // 1. Header (Logo Image + Text + Subtitle)
+      const logoImg = document.querySelector(".logo-area img");
+      if (logoImg) {
+        // Draw just the lightning bolt icon (Width: 20, Height: 14)
+        doc.addImage(logoImg, "PNG", leftCol, yOffset + 12, 20, 18);
+      }
+
+      // Draw the bold "EzGadgets" text right next to the icon
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text("EZ GADGETS.", leftMargin, yOffset + 20);
+      doc.setFontSize(26);
+      doc.setTextColor(0, 0, 0); // Solid black
+      doc.text("EzGadgets", leftCol + 22, yOffset + 24);
 
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(120, 120, 120);
-      doc.text(label.toUpperCase(), rightMargin, yOffset + 20, {
+      // Draw the gray "WARRANTY RECEIPT" text below it
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(130, 130, 130);
+      doc.text("WARRANTY RECEIPT", leftCol, yOffset + 32);
+
+      // Office/Customer Copy Label
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(label.toUpperCase(), rightMargin, yOffset + 24, {
         align: "right",
       });
 
-      doc.setDrawColor(220, 220, 220);
-      doc.setLineWidth(0.2);
-      doc.line(leftMargin, yOffset + 26, rightMargin, yOffset + 26);
+      // Horizontal Divider
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(leftCol, yOffset + 36, rightMargin, yOffset + 36);
 
-      // Info Grid
-      doc.setFontSize(7);
+      // 2. Two-Column Layout (Customer Details vs RMA Details)
+      const columnY = yOffset + 48;
+
+      // --- Left Column: Customer ---
+      doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(150, 150, 150);
-      doc.text("RMA NUMBER", leftMargin, yOffset + 36);
-      doc.text("DATE", midPoint, yOffset + 36);
-      doc.text("BRANCH", 155, yOffset + 36);
-
-      doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      doc.text(String(r.rma_code || "N/A"), leftMargin, yOffset + 42);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(r.date || ""), midPoint, yOffset + 42);
-      doc.text(String(r.location || ""), 155, yOffset + 42);
-
-      doc.line(leftMargin, yOffset + 50, rightMargin, yOffset + 50);
-
-      // Customer & Device
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(150, 150, 150);
-      doc.text("CLIENT DETAILS", leftMargin, yOffset + 60);
-      doc.text("DEVICE INFO", midPoint, yOffset + 60);
-
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text(String(r.customer_name || "N/A"), leftMargin, yOffset + 66);
-      doc.text(String(r.product_name || "N/A"), midPoint, yOffset + 66);
-
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80, 80, 80);
-      doc.text(String(r.contact || ""), leftMargin, yOffset + 71);
-      doc.text(`S/N: ${r.serial_number || "N/A"}`, midPoint, yOffset + 71);
-
-      // Issue
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(150, 150, 150);
-      doc.text("REPORTED ISSUE", leftMargin, yOffset + 95);
+      doc.text("CUSTOMER DETAILS", leftCol + 10, columnY);
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(0, 0, 0);
+      doc.text(
+        `Name :      ${r.customer_name || "N/A"}`,
+        leftCol,
+        columnY + 10,
+      );
+      doc.text(`Contact :   ${r.contact || ""}`, leftCol, columnY + 16);
+
+      const addressLines = doc.splitTextToSize(
+        `Address :   ${r.address || "N/A"}`,
+        80,
+      );
+      doc.text(addressLines, leftCol, columnY + 22);
+
+      // --- Vertical Divider ---
+      doc.setDrawColor(180, 180, 180);
+      doc.line(100, columnY - 2, 100, columnY + 35);
+
+      // --- Right Column: RMA ---
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("RMA DETAILS", rightCol + 10, columnY);
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      // Use bold for the labels, normal for the values to match the SVG exactly
+      doc.setFont("helvetica", "bold");
+      doc.text("RMA Code:", rightCol, columnY + 10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${r.rma_code || "N/A"}`, rightCol + 18, columnY + 10);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Date:", rightCol, columnY + 16);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${r.date || ""}`, rightCol + 9, columnY + 16);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Branch:", rightCol, columnY + 22);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${r.location || ""}`, rightCol + 13, columnY + 22);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("PRODUCT:", rightCol, columnY + 28);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${r.product_name || "N/A"}`, rightCol + 19, columnY + 28);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("S/N:", rightCol, columnY + 34);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${r.serial_number || "N/A"}`, rightCol + 8, columnY + 34);
+
+      // 3. Issue Description Box
+      const boxY = columnY + 45;
+
+      doc.setFillColor(235, 235, 235); // Slightly darker gray to show over background
+      doc.roundedRect(leftCol, boxY, 170, 25, 3, 3, "F");
+
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "normal");
       const cleanIssue = (r.issue || "No description provided").replace(
         /[^\x00-\x7F]/g,
         "",
       );
-      doc.text(doc.splitTextToSize(cleanIssue, 170), leftMargin, yOffset + 101);
+      const splitIssue = doc.splitTextToSize(cleanIssue, 145);
 
-      // Signatures
-      doc.setDrawColor(0, 0, 0);
-      doc.line(leftMargin, yOffset + 135, 70, yOffset + 135);
-      doc.line(140, yOffset + 135, rightMargin, yOffset + 135);
+      doc.text("ISSUE :  ", leftCol + 5, boxY + 8);
+      doc.text(splitIssue, leftCol + 18, boxY + 8);
 
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      doc.text("CUSTOMER SIGNATURE", leftMargin, yOffset + 140);
-      doc.text("AUTHORIZED SIGNATURE", 140, yOffset + 140);
+      // 4. Signatures
+      const sigY = boxY + 45;
+      doc.setDrawColor(150, 150, 150);
+      doc.setLineWidth(0.3);
+
+      doc.line(leftCol, sigY, 70, sigY);
+      doc.setFontSize(8);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Customer Signature", leftCol, sigY + 5);
+
+      doc.line(140, sigY, rightMargin, sigY);
+      doc.text("Authorized Signatory", 140, sigY + 5);
     };
 
-    // Draw Office & Customer Copies
-    drawSection(0, "Office Copy");
+    // Draw Office Copy
+    drawSection(0, "OFFICE COPY");
 
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineDashPattern([1, 2], 0);
+    // Draw Scissor / Cut Line
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.setLineWidth(0.5);
     doc.line(10, 148, 200, 148);
     doc.setLineDashPattern([], 0);
 
-    drawSection(148, "Customer Copy");
+    // Draw Customer Copy
+    drawSection(148, "CUSTOMER COPY");
 
-    // Save
     doc.save(`EZ-RMA-${r.rma_code}.pdf`);
   } catch (err) {
     console.error(err);
     alert("Critical Print Error: " + err.message);
   }
+}
+
+// Opens the modal and injects the customer data
+function viewCustomer(name, phone, address) {
+  // We replace single quotes just in case a name has an apostrophe (like O'Connor)
+  const safeName = name ? name.replace(/'/g, "\\'") : "N/A";
+  const safePhone = phone ? phone.replace(/'/g, "\\'") : "N/A";
+  const safeAddress = address ? address.replace(/'/g, "\\'") : "N/A";
+
+  const content = `
+        <div class="copy-block" onclick="copyText('${safeName}')" title="Copy Name">
+            <div>
+                <span class="copy-label">Name</span>
+                <span class="copy-value">${name || "N/A"}</span>
+            </div>
+            <span style="font-size: 16px;">📋</span>
+        </div>
+        <div class="copy-block" onclick="copyText('${safePhone}')" title="Copy Phone">
+            <div>
+                <span class="copy-label">Phone</span>
+                <span class="copy-value">${phone || "N/A"}</span>
+            </div>
+            <span style="font-size: 16px;">📋</span>
+        </div>
+        <div class="copy-block" onclick="copyText('${safeAddress}')" title="Copy Address">
+            <div>
+                <span class="copy-label">Address</span>
+                <span class="copy-value">${address || "N/A"}</span>
+            </div>
+            <span style="font-size: 16px;">📋</span>
+        </div>
+    `;
+
+  document.getElementById("customerModalContent").innerHTML = content;
+  document.getElementById("customerModal").style.display = "flex";
+}
+
+// Handles the actual clipboard copying
+function copyText(text) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      // If you have a toast notification system, it will use it. Otherwise, normal alert.
+      if (typeof showToast === "function") {
+        showToast("Copied: " + text, "success");
+      } else {
+        alert("Copied to clipboard!\n" + text);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to copy: ", err);
+    });
 }

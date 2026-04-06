@@ -721,6 +721,61 @@ select option {
 }
 
 /* ==========================================================================
+   CUSTOMER DETAILS & CLICK-TO-COPY
+   ========================================================================== */
+.eye-btn {
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eye-btn:hover {
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.copy-block {
+  background: var(--surface2, #1e1e1e);
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.copy-block:hover {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.copy-label {
+  font-size: 11px;
+  color: var(--text3);
+  display: block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.copy-value {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+/* ==========================================================================
    ENHANCED LOGOUT BUTTONS & NAV-STYLE UNDERLINE
    ========================================================================== */
 
@@ -841,43 +896,43 @@ body {
   width: 100%;
 }
 /* 1. Fix the RMA Code Color and Prevent Breaking */
-td:first-child, 
-.rma-code, 
+td:first-child,
+.rma-code,
 .col-rma {
-    color: #3b82f6 !important; /* Your Admin Blue */
-    font-weight: 700 !important;
-    white-space: nowrap !important; /* Forces the ID to stay on one line */
-    font-family: 'Inter Tight', sans-serif !important;
-    letter-spacing: 0.5px !important;
+  color: #3b82f6 !important; /* Your Admin Blue */
+  font-weight: 700 !important;
+  white-space: nowrap !important; /* Forces the ID to stay on one line */
+  font-family: "Inter Tight", sans-serif !important;
+  letter-spacing: 0.5px !important;
 }
 
 /* 2. Adjust Column Widths so there is space for the code */
 table {
-    table-layout: auto !important;
-    width: 100% !important;
-    border-collapse: collapse !important;
+  table-layout: auto !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
 }
 
 /* Give the first column a bit more room to breathe */
-th:first-child, 
+th:first-child,
 td:first-child {
-    min-width: 180px !important; 
-    padding-right: 20px !important;
+  min-width: 180px !important;
+  padding-right: 20px !important;
 }
 
 /* 3. Match the Admin Typography for the rest of the row */
 td {
-    font-size: 14px !important;
-    color: var(--text) !important;
-    padding: 16px 12px !important; /* Spacious Admin padding */
-    vertical-align: middle !important;
+  font-size: 14px !important;
+  color: var(--text) !important;
+  padding: 16px 12px !important; /* Spacious Admin padding */
+  vertical-align: middle !important;
 }
 
 /* Ensure the Device Name is Bold like Admin */
-td:nth-child(2), 
+td:nth-child(2),
 .device-name {
-    font-weight: 600 !important;
-    color: var(--text) !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
 }
 
 /* ==========================================================================
@@ -1128,8 +1183,6 @@ td:nth-child(2),
     padding: 12px !important;
     margin-top: 5px !important;
   }
-
-  
 
   /* 7. MODAL FIXES */
   .modal,

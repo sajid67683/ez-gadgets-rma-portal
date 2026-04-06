@@ -33,9 +33,20 @@ function renderTable(records, container) {
     container.innerHTML = `<div class="empty-state"><p>No assigned devices.</p></div>`;
     return;
   }
+
   let html = `<div style="overflow-x: auto;"><table class="records-table">
-        <thead><tr><th>RMA</th><th>Device</th><th>Issue</th><th>Status</th><th>Action</th></tr></thead>
+        <thead>
+            <tr>
+                <th>RMA</th>
+                <th style="white-space: nowrap; min-width: 80px;">Device</th>
+                <th>Issue</th>
+                <th>Details</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
         <tbody>`;
+
   records.forEach((r) => {
     let statusClass = "badge-received";
     if (r.status === "Fixed") statusClass = "badge-fixed";
@@ -43,15 +54,37 @@ function renderTable(records, container) {
     else if (r.status === "Cannot Fix") statusClass = "badge-sent";
     else if (r.status.includes("Repair")) statusClass = "badge-inhouse";
 
+    // BULLETPROOFING: Clean the data of any quotes that might break HTML
+    const safeName = (r.customer || r.customer_name || "")
+      .replace(/'/g, "\\'")
+      .replace(/"/g, "&quot;");
+    const safePhone = (r.phone || r.contact || "")
+      .replace(/'/g, "\\'")
+      .replace(/"/g, "&quot;");
+    const safeAddress = (r.address || "")
+      .replace(/'/g, "\\'")
+      .replace(/"/g, "&quot;");
+
     html += `
             <tr>
                 <td style="font-family: monospace; font-weight: 600;">${r.rma_code}</td>
                 <td><strong>${r.product_name}</strong></td>
                 <td><div style="max-width: 250px;">${r.issue}</div></td>
+                
+                <td class="details-col" style="text-align: center;">
+                    <button class="eye-btn" onclick="viewCustomer('${safeName}', '${safePhone}', '${safeAddress}')" title="View Customer Details">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </td>
+                
                 <td><span class="badge ${statusClass}">${r.status}</span></td>
                 <td><button class="btn btn-secondary" onclick='openTechDetail(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Update</button></td>
             </tr>`;
   });
+
   html += `</tbody></table></div>`;
   container.innerHTML = html;
 }
@@ -101,4 +134,56 @@ async function updateTechStatus(code) {
 }
 function closeModal() {
   document.getElementById("techModal").classList.remove("show");
+}
+
+// Opens the modal and injects the customer data
+function viewCustomer(name, phone, address) {
+  // We replace single quotes just in case a name has an apostrophe (like O'Connor)
+  const safeName = name ? name.replace(/'/g, "\\'") : "N/A";
+  const safePhone = phone ? phone.replace(/'/g, "\\'") : "N/A";
+  const safeAddress = address ? address.replace(/'/g, "\\'") : "N/A";
+
+  const content = `
+        <div class="copy-block" onclick="copyText('${safeName}')" title="Copy Name">
+            <div>
+                <span class="copy-label">Name</span>
+                <span class="copy-value">${name || "N/A"}</span>
+            </div>
+            <span style="font-size: 16px;">📋</span>
+        </div>
+        <div class="copy-block" onclick="copyText('${safePhone}')" title="Copy Phone">
+            <div>
+                <span class="copy-label">Phone</span>
+                <span class="copy-value">${phone || "N/A"}</span>
+            </div>
+            <span style="font-size: 16px;">📋</span>
+        </div>
+        <div class="copy-block" onclick="copyText('${safeAddress}')" title="Copy Address">
+            <div>
+                <span class="copy-label">Address</span>
+                <span class="copy-value">${address || "N/A"}</span>
+            </div>
+            <span style="font-size: 16px;">📋</span>
+        </div>
+    `;
+
+  document.getElementById("customerModalContent").innerHTML = content;
+  document.getElementById("customerModal").style.display = "flex";
+}
+
+// Handles the actual clipboard copying
+function copyText(text) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      // If you have a toast notification system, it will use it. Otherwise, normal alert.
+      if (typeof showToast === "function") {
+        showToast("Copied: " + text, "success");
+      } else {
+        alert("Copied to clipboard!\n" + text);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to copy: ", err);
+    });
 }
