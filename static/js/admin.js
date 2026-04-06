@@ -231,8 +231,7 @@ function showToast(msg, type = "info") {
   t.innerHTML = msg;
   setTimeout(() => t.classList.remove("show"), 3200);
 }
-// PDF function remains same as previous minimalist version
-// --- PDF Generation (Ultra-Minimal / High-End Layout) ---
+// --- PDF Generation ---
 function printFromAdmin(r) {
   try {
     if (!window.jspdf) {
@@ -243,7 +242,6 @@ function printFromAdmin(r) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
-    // --- NEW: Draw the Background First ---
     // A4 paper size is 210mm x 297mm
     const bgImg = document.getElementById("pdf-bg");
     if (bgImg) {
@@ -403,7 +401,7 @@ function printFromAdmin(r) {
 
 // Opens the modal and injects the customer data
 function viewCustomer(name, phone, address) {
-  // We replace single quotes just in case a name has an apostrophe (like O'Connor)
+  // replaces single quotes just in case a name has an apostrophe (like O'Connor)
   const safeName = name ? name.replace(/'/g, "\\'") : "N/A";
   const safePhone = phone ? phone.replace(/'/g, "\\'") : "N/A";
   const safeAddress = address ? address.replace(/'/g, "\\'") : "N/A";

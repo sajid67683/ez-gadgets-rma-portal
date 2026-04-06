@@ -11,12 +11,10 @@
   --text: #09090b;
   --text2: #52525b;
   --text3: #a1a1aa;
-
   --accent: #2563eb; /* Modern Blue */
   --accent-hover: #1d4ed8;
   --accent2: #0d9488; /* Teal */
   --accent3: #e11d48; /* Rose/Red */
-
   --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.15);
   --radius: 12px;
@@ -31,7 +29,6 @@
   --text: #fafafa;
   --text2: #a1a1aa;
   --text3: #71717a;
-
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
   --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
@@ -58,7 +55,7 @@ body {
 }
 
 /* ==========================================================================
-   FIXED: CENTERED HEADER WITH LARGE LOGO & TEXT
+  CENTERED HEADER WITH LARGE LOGO & TEXT
    ========================================================================== */
 
 header {
@@ -119,7 +116,7 @@ header {
   flex-shrink: 0;
 }
 
-/* Fix for the "Updat e" button issue from the last image */
+/* Fix for the "Update" button issue from the last image */
 .records-table .btn {
   white-space: nowrap !important;
   min-width: 110px;
@@ -185,7 +182,7 @@ nav {
   border-bottom: 2px solid var(--accent);
 }
 
-/* LAYOUT & PANELS (CENTERED & COMPACT) */
+/* LAYOUT & PANELS */
 main {
   flex: 1;
   display: flex;
@@ -682,12 +679,12 @@ select option {
 }
 
 /* ==========================================================================
-   FIX: WE REPAIR BD TABLE SQUEEZING
+  WE REPAIR BD TABLE SQUEEZING
    ========================================================================== */
 
 /* 1. Prevent buttons from breaking/shrinking */
 .records-table .btn {
-  white-space: nowrap !important; /* Prevents "Updat e" */
+  white-space: nowrap !important; /* Prevents "Update" */
   min-width: 100px; /* Ensures a consistent button size */
   padding: 8px 16px; /* Comfortable padding */
 }
@@ -721,7 +718,7 @@ select option {
 }
 
 /* ==========================================================================
-   CUSTOMER DETAILS & CLICK-TO-COPY
+  CUSTOMER DETAILS & CLICK-TO-COPY
    ========================================================================== */
 .eye-btn {
   background: transparent;
@@ -776,7 +773,7 @@ select option {
 }
 
 /* ==========================================================================
-   ENHANCED LOGOUT BUTTONS & NAV-STYLE UNDERLINE
+  ENHANCED LOGOUT BUTTONS & NAV-STYLE UNDERLINE
    ========================================================================== */
 
 /* Larger, more prominent logout button */
@@ -828,7 +825,7 @@ select option {
   width: 220px !important; /* Balanced for centering */
 }
 /* ==========================================================================
-   DESKTOP TABS (Modern Pill Style)
+  DESKTOP TABS (Modern Pill Style)
    ========================================================================== */
 .tabs {
   display: flex;
@@ -887,7 +884,7 @@ select option {
 }
 
 /* ==========================================================================
-   MOBILE RESPONSIVENESS FIX (CORRECTED)
+  MOBILE RESPONSIVENESS FIX (CORRECTED)
    ========================================================================== */
 /* Prevent the entire page from sliding left/right */
 html,
@@ -936,7 +933,7 @@ td:nth-child(2),
 }
 
 /* ==========================================================================
-   MOBILE RESPONSIVENESS FIX (FINAL CONSOLIDATED VERSION)
+  MOBILE RESPONSIVENESS FIX (FINAL CONSOLIDATED VERSION)
    ========================================================================== */
 @media screen and (max-width: 768px) {
   /* 1. LAYOUT REORDERING & GLOBAL */

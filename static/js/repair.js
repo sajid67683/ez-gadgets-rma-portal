@@ -54,7 +54,7 @@ function renderTable(records, container) {
     else if (r.status === "Cannot Fix") statusClass = "badge-sent";
     else if (r.status.includes("Repair")) statusClass = "badge-inhouse";
 
-    // BULLETPROOFING: Clean the data of any quotes that might break HTML
+    //Clean the data of any quotes that might break HTML
     const safeName = (r.customer || r.customer_name || "")
       .replace(/'/g, "\\'")
       .replace(/"/g, "&quot;");
@@ -138,7 +138,7 @@ function closeModal() {
 
 // Opens the modal and injects the customer data
 function viewCustomer(name, phone, address) {
-  // We replace single quotes just in case a name has an apostrophe (like O'Connor)
+  //replaces single quotes just in case a name has an apostrophe (like O'Connor)
   const safeName = name ? name.replace(/'/g, "\\'") : "N/A";
   const safePhone = phone ? phone.replace(/'/g, "\\'") : "N/A";
   const safeAddress = address ? address.replace(/'/g, "\\'") : "N/A";
