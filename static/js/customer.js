@@ -1,22 +1,26 @@
-function switchTab(id) {
-  const tabs = ["new", "track"];
-  document
-    .querySelectorAll("nav:not(.bottom-nav) .tab")
-    .forEach((t) => t.classList.remove("active"));
-  const tabEls = document.querySelectorAll("nav:not(.bottom-nav) .tab");
-  if (tabEls[tabs.indexOf(id)])
-    tabEls[tabs.indexOf(id)].classList.add("active");
+function switchTab(tabId, clickedButton) {
+  // 1. Move the blue highlight pill
+  const allTabs = document.querySelectorAll(".tab-btn");
+  allTabs.forEach((btn) => btn.classList.remove("active"));
 
-  tabs.forEach((t) => {
-    const el = document.getElementById("bnav-" + t);
-    if (el) el.classList.toggle("active", t === id);
-  });
+  if (clickedButton) {
+    clickedButton.classList.add("active");
+  }
 
-  document
-    .querySelectorAll(".panel")
-    .forEach((p) => p.classList.remove("active"));
-  document.getElementById("panel-" + id).classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  // 2. Grab your forms using their exact IDs
+  const claimForm = document.getElementById("panel-new");
+
+  // NOTE: Check your HTML to make sure 'panel-track' is the exact ID of your tracking form!
+  const trackForm = document.getElementById("panel-track");
+
+  // 3. Swap the visibility
+  if (tabId === "new") {
+    if (claimForm) claimForm.style.display = "block";
+    if (trackForm) trackForm.style.display = "none";
+  } else {
+    if (claimForm) claimForm.style.display = "none";
+    if (trackForm) trackForm.style.display = "block";
+  }
 }
 
 function showToast(msg, type = "info") {

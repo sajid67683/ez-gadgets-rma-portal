@@ -12,11 +12,9 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <script>
         const savedTheme = localStorage.getItem('ez_theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
@@ -28,38 +26,39 @@
 </head>
 
 <body>
-
     <header>
         <div class="header-left-spacer"></div>
-
         <div class="logo-area">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Ez Gadgets Logo">
             <div class="logo-text">
                 <h1>EZ GADGETS</h1>
-                <p>Admin Management Console</p>
+                <p>Admin Dashboard</p>
             </div>
         </div>
-
         <div class="header-controls">
-            <a href="/logout" class="btn btn-logout">Admin Logout</a>
+            <a href="/logout" class="icon-btn" title="Logout">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon"></button>
         </div>
     </header>
     <script>document.getElementById('themeIcon').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';</script>
-
-    <nav>
-        <div class="tab active" onclick="switchTab('all')">All Records</div>
-        <div class="tab" onclick="switchTab('search')">Search</div>
-        <div class="tab" onclick="switchTab('setup')">Settings</div>
-    </nav>
-
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('all', this)">All Records</button>
+        <button class="tab-btn" onclick="switchTab('search', this)">Search</button>
+        <button class="tab-btn" onclick="switchTab('setup', this)">Settings</button>
+    </div>
     <main>
         <div class="panel admin-panel active" id="panel-all">
             <div class="section-header">
                 <h2>Warranty Overview</h2>
                 <p>Real-time statistics across all branches</p>
             </div>
-
             <div class="stats-row" id="statsRow">
                 <div class="stat-card">
                     <div class="sv" id="stat-total">0</div>
@@ -70,14 +69,12 @@
                     <div class="sl">Active Repairs</div>
                 </div>
             </div>
-
             <div id="allRecordsList">
                 <div class="empty-state"><span class="spinner"></span>
                     <p>Fetching database...</p>
                 </div>
             </div>
         </div>
-
         <div class="panel admin-panel" id="panel-search">
             <div class="section-header">
                 <h2>Universal Search</h2>
@@ -88,7 +85,6 @@
             </div>
             <div id="searchResults" style="margin-top: 24px;"></div>
         </div>
-
         <div class="panel admin-panel" id="panel-setup">
             <div class="section-header">
                 <h2>Admin Configuration</h2>
@@ -105,7 +101,6 @@
             </div>
         </div>
     </main>
-
     <div class="modal-overlay" id="adminModal">
         <div class="modal">
             <div class="modal-header">
@@ -115,9 +110,7 @@
             <div id="modalContent"></div>
         </div>
     </div>
-
     <div class="toast" id="toast"></div>
-
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 

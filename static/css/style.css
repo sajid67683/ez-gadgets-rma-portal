@@ -1,5 +1,5 @@
 /* ==========================================================================
-   EZ GADGETS - LIGHT/DARK THEMEABLE UI
+  EZ GADGETS - LIGHT/DARK THEMEABLE UI
    ========================================================================== */
 
 /* LIGHT MODE (Default) */
@@ -771,4 +771,385 @@ select option {
 
 .header-left-spacer {
   width: 220px !important; /* Balanced for centering */
+}
+/* ==========================================================================
+   DESKTOP TABS (Modern Pill Style)
+   ========================================================================== */
+.tabs {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 500px; /* Keeps them from stretching across the whole monitor */
+  margin: 30px auto;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.tab-btn {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  border-radius: 25px;
+  cursor: pointer; /* Gives the mouse a pointer hand on PC */
+  transition: 0.3s ease;
+  text-align: center;
+}
+
+/* Add a nice hover effect for PC users with a mouse */
+.tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* General Icon Button Styling (Put this above your media query) */
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.icon-btn:hover {
+  background: var(--border);
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS FIX (CORRECTED)
+   ========================================================================== */
+/* Prevent the entire page from sliding left/right */
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+/* 1. Fix the RMA Code Color and Prevent Breaking */
+td:first-child, 
+.rma-code, 
+.col-rma {
+    color: #3b82f6 !important; /* Your Admin Blue */
+    font-weight: 700 !important;
+    white-space: nowrap !important; /* Forces the ID to stay on one line */
+    font-family: 'Inter Tight', sans-serif !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* 2. Adjust Column Widths so there is space for the code */
+table {
+    table-layout: auto !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+/* Give the first column a bit more room to breathe */
+th:first-child, 
+td:first-child {
+    min-width: 180px !important; 
+    padding-right: 20px !important;
+}
+
+/* 3. Match the Admin Typography for the rest of the row */
+td {
+    font-size: 14px !important;
+    color: var(--text) !important;
+    padding: 16px 12px !important; /* Spacious Admin padding */
+    vertical-align: middle !important;
+}
+
+/* Ensure the Device Name is Bold like Admin */
+td:nth-child(2), 
+.device-name {
+    font-weight: 600 !important;
+    color: var(--text) !important;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS FIX (FINAL CONSOLIDATED VERSION)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  /* 1. LAYOUT REORDERING & GLOBAL */
+  body {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  header {
+    order: 1 !important;
+  }
+  #panel-search {
+    order: 2 !important;
+    display: block !important;
+  } /* Pins search bar under navbar */
+  .tabs {
+    order: 3 !important;
+  }
+  main {
+    order: 4 !important;
+  }
+
+  /* 2. HEADER & LOGO AREA */
+  header {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 12px 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .header-left-spacer {
+    display: none !important;
+  }
+
+  .logo-area {
+    display: flex !important;
+    align-items: center !important;
+    width: calc(100% - 95px) !important;
+    max-width: none !important;
+    flex-shrink: 1 !important;
+  }
+
+  .logo-area img {
+    max-height: 32px !important;
+    margin-right: 8px !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .logo-text h1 {
+    font-size: 1.05rem !important;
+    margin: 0 0 2px 0 !important;
+    white-space: normal !important;
+    line-height: 1.1 !important;
+  }
+
+  .logo-text p {
+    font-size: 0.65rem !important;
+    margin: 0 !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+  }
+
+  .header-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+    flex-shrink: 0 !important;
+  }
+
+  .header-controls a.icon-btn,
+  .header-controls button.theme-toggle {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+  }
+
+  /* 3. PINNED SEARCH BAR & PANEL */
+  #panel-search {
+    width: 92% !important;
+    margin: 10px auto !important;
+    padding: 12px !important;
+    background: var(--bg-color) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  #panel-search .section-header {
+    display: none !important;
+  }
+
+  #adminSearchQuery {
+    width: 100% !important;
+    padding: 12px !important;
+    font-size: 16px !important; /* Prevents iOS auto-zoom */
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 4. MODERN PILL TABS - RE-FIXED */
+  .tabs {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 90% !important;
+    max-width: 400px !important;
+    margin: 15px auto !important; /* Centers it with space around it */
+    background: rgba(
+      255,
+      255,
+      255,
+      0.05
+    ) !important; /* Slight background tint */
+    border: 1px solid var(--border) !important;
+    border-radius: 50px !important; /* Makes the container a pill */
+    padding: 5px !important;
+    box-sizing: border-box !important;
+    order: 2 !important; /* Ensures it stays under header */
+  }
+
+  .tab-btn {
+    flex: 1 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 10px !important;
+    border-radius: 40px !important; /* Makes the active button a pill */
+    border: none !important;
+    background: transparent !important;
+    color: var(--text) !important;
+    transition: 0.3s ease !important;
+    cursor: pointer !important;
+  }
+
+  .tab-btn.active {
+    background: var(--accent) !important;
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  nav {
+    display: none !important;
+  }
+
+  /* 5. FORM & CONTENT COMPACTING */
+  .form-container,
+  .panel {
+    width: 92% !important;
+    margin: 0 auto 20px auto !important;
+    padding: 15px !important;
+    box-sizing: border-box !important;
+  }
+
+  .form-row,
+  .input-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+
+  textarea {
+    height: 60px !important;
+    min-height: 60px !important;
+  }
+
+  /* 6. TABLE-TO-CARD "NUKE" FIX */
+  .table-container,
+  table,
+  tbody,
+  tr,
+  td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  thead,
+  .table-header {
+    display: none !important;
+  }
+
+  tbody tr,
+  .rma-row,
+  .ticket-row,
+  .repair-row {
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--bg-color) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+    margin-bottom: 15px !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  tbody td,
+  .col,
+  div[class^="col-"] {
+    border: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  /* Card Header styling for first column */
+  tbody td:first-child,
+  .rma-code {
+    font-size: 1.1rem !important;
+    font-weight: bold !important;
+    color: var(--accent) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .status-badge {
+    width: fit-content !important;
+  }
+
+  .btn-manage,
+  .manage-btn,
+  tbody td:last-child button {
+    width: 100% !important;
+    padding: 12px !important;
+    margin-top: 5px !important;
+  }
+
+  
+
+  /* 7. MODAL FIXES */
+  .modal,
+  #manageModal {
+    width: 94% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 15px !important;
+    margin: 4vh auto !important;
+  }
+
+  .modal-actions,
+  .modal-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+  }
+
+  .modal-actions button {
+    flex: 1 !important;
+    padding: 10px !important;
+  }
 }

@@ -31,7 +31,7 @@ class RMARecord(db.Model):
     serial_number = db.Column(db.String(100))
     issue = db.Column(db.Text, nullable=False)
 
-    status = db.Column(db.String(50), default="Received")
+    status = db.Column(db.String(50), default="Pending Drop-off")
     repair_location = db.Column(db.String(100), default="In-House")
     admin_notes = db.Column(db.Text, default="")
 

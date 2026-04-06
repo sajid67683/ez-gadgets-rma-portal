@@ -28,12 +28,19 @@
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="We Repair BD Logo">
             <div class="logo-text">
                 <h1>WE REPAIR BD</h1>
-                <p>Technician Fulfillment Portal</p>
+                <p>RMA Dashboard</p>
             </div>
         </div>
 
         <div class="header-controls">
-            <a href="/repair-logout" class="btn btn-logout">Tech Logout</a>
+            <a href="/repair-logout" class="icon-btn" title="Logout">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon"></button>
         </div>
     </header>

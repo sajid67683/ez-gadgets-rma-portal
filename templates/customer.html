@@ -11,11 +11,9 @@
         rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
     <script>
         const savedTheme = localStorage.getItem('ez_theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
@@ -27,10 +25,8 @@
 </head>
 
 <body>
-
     <header>
         <div class="header-left-spacer"></div>
-
         <div class="logo-area">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Ez Gadgets Logo">
             <div class="logo-text">
@@ -38,26 +34,21 @@
                 <p>Official Warranty Portal</p>
             </div>
         </div>
-
         <div class="header-controls">
             <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon"></button>
         </div>
     </header>
     <script>document.getElementById('themeIcon').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';</script>
-
-    <nav>
-        <div class="tab active" onclick="switchTab('new')">Submit Claim</div>
-        <div class="tab" onclick="switchTab('track')">Track Status</div>
-    </nav>
-
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('new', this)">Submit Claim</button>
+        <button class="tab-btn" onclick="switchTab('track', this)">Track Status</button>
+    </div>
     <main>
-
         <div class="panel active" id="panel-new">
             <div class="section-header">
                 <h2>Start a Warranty Claim</h2>
                 <p>Fill out your details to generate an RMA drop-off code</p>
             </div>
-
             <div class="form-grid">
                 <div class="form-group full">
                     <label>Drop-off Branch</label>
@@ -79,41 +70,35 @@
                     <label>Address</label>
                     <input type="text" id="address" placeholder="Street, area, city">
                 </div>
-
                 <div class="divider" style="grid-column:1/-1;margin:4px 0;"></div>
-
                 <div class="form-group">
                     <label>Product Name</label>
-                    <input type="text" id="productName" placeholder="e.g. iPhone 15 Pro">
+                    <input type="text" id="productName" placeholder="e.g. Aula F75">
                 </div>
                 <div class="form-group">
                     <label>Serial Number</label>
-                    <input type="text" id="serialNumber" placeholder="IMEI / S/N">
+                    <input type="text" id="serialNumber" placeholder="S/N must match with the product">
                 </div>
                 <div class="form-group full">
                     <label>Issue Description</label>
                     <textarea id="issue" placeholder="Describe the problem in detail…"></textarea>
                 </div>
             </div>
-
             <div class="code-display" id="codeDisplay">
                 <div class="label">Your RMA Tracking Code</div>
                 <div class="code" id="generatedCode">—</div>
                 <p style="font-size: 12px; color: var(--text3); margin-top: 8px;">Please write this code down and bring
                     it with your device to the store.</p>
             </div>
-
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="submitRMA()" id="submitBtn">Submit Claim</button>
             </div>
         </div>
-
         <div class="panel" id="panel-track">
             <div class="section-header">
                 <h2>Track Your Device</h2>
                 <p>Enter your RMA code to check the repair status</p>
             </div>
-
             <div class="form-group full">
                 <input type="text" id="trackQuery" placeholder="e.g. EZ-BDA-240415-ABCD"
                     onkeyup="if(event.key==='Enter') trackRMA()"
@@ -122,14 +107,10 @@
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="trackRMA()" id="trackBtn">Check Status</button>
             </div>
-
             <div id="trackResults" style="margin-top: 32px;"></div>
         </div>
-
     </main>
-
     <div class="toast" id="toast"></div>
-
     <nav class="bottom-nav">
         <div class="bottom-nav-inner">
             <button class="bnav-item active" onclick="switchTab('new')" id="bnav-new">
@@ -140,7 +121,6 @@
             </button>
         </div>
     </nav>
-
     <script src="{{ url_for('static', filename='js/customer.js') }}"></script>
 </body>
 
