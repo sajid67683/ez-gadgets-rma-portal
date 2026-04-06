@@ -985,8 +985,8 @@ td:nth-child(2),
   }
 
   .logo-area img {
-    max-height: 32px !important;
-    margin-right: 8px !important;
+    max-height: 40px !important;
+    margin-right: -8px !important;
     width: auto !important;
     flex-shrink: 0 !important;
   }
