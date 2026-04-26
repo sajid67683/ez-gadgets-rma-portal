@@ -4,12 +4,23 @@ from datetime import datetime
 import random
 import string
 import requests
+import os
+
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ-m39N1lQ82y76-KnTGj5dxL4mWbsHULFcAvHRv-rBKctYKlverRDLzVRPhSTuqCi4g/exec"
 
 app = Flask(__name__)
 
 # --- CONFIGURATION ---
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ezgadgets_rma.db'
+# Get the absolute path to the directory this file is in
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# Point directly to the instance folder that Docker is protecting
+INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
+os.makedirs(INSTANCE_DIR, exist_ok=True)
+
+# Update the connection string to use the protected folder
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
+    os.path.join(INSTANCE_DIR, 'ezgadgets_rma.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'ez-gadgets-rma-91716493987'
 db = SQLAlchemy(app)
@@ -244,8 +255,8 @@ def get_repair_rmas():
             "issue": r.issue,
             "status": r.status,
             "date": r.date_received.strftime("%d/%m/%Y"),
-            "customer_name": r.customer_name, 
-            "contact": r.contact,             
+            "customer_name": r.customer_name,
+            "contact": r.contact,
             "address": r.address
         })
     return jsonify({"success": True, "records": result})
@@ -280,4 +291,4 @@ def update_repair_rma():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5000)

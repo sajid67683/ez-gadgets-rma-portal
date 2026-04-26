@@ -3,4 +3,4 @@ venv/
 env/
 .git/
 .env
-ezgadgets_rma.db
+instance/ezgadgets_rma.db
