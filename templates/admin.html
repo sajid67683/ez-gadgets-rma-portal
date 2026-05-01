@@ -1,26 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ez Gadgets RMA | Admin Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        rel="stylesheet" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        const savedTheme = localStorage.getItem('ez_theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
+        const savedTheme = localStorage.getItem("ez_theme") || "light";
+        document.documentElement.setAttribute("data-theme", savedTheme);
         function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('ez_theme', next);
-            document.getElementById('themeIcon').innerText = next === 'dark' ? '☀️' : '🌙';
+            const current = document.documentElement.getAttribute("data-theme");
+            const next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("ez_theme", next);
+            document.getElementById("themeIcon").innerText =
+                next === "dark" ? "☀️" : "🌙";
         }
     </script>
 </head>
@@ -29,14 +30,14 @@
     <header>
         <div class="header-left-spacer"></div>
         <div class="logo-area">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Ez Gadgets Logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Ez Gadgets Logo" />
             <div class="logo-text">
                 <h1>EZ GADGETS</h1>
                 <p>Admin Dashboard</p>
             </div>
         </div>
         <div class="header-controls">
-            <a href="/logout" class="icon-btn" title="Logout">
+            <a href="{{ url_for('admin.logout') }}" class="icon-btn" title="Logout">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -47,13 +48,27 @@
             <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon"></button>
         </div>
     </header>
-    <script>document.getElementById('themeIcon').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';</script>
+    <script>
+        document.getElementById("themeIcon").innerText =
+            document.documentElement.getAttribute("data-theme") === "dark"
+                ? "☀️"
+                : "🌙";
+    </script>
+
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('all', this)">All Records</button>
-        <button class="tab-btn" onclick="switchTab('search', this)">Search</button>
-        <button class="tab-btn" onclick="switchTab('setup', this)">Settings</button>
+        <button class="tab-btn active" onclick="switchTab('all', this)">
+            All Records
+        </button>
+        <button class="tab-btn" onclick="switchTab('search', this)">
+            Search
+        </button>
+        <button class="tab-btn" onclick="switchTab('setup', this)">
+            Settings
+        </button>
     </div>
+
     <main>
+        <!-- ALL RECORDS PANEL -->
         <div class="panel admin-panel active" id="panel-all">
             <div class="section-header">
                 <h2>Warranty Overview</h2>
@@ -70,37 +85,51 @@
                 </div>
             </div>
             <div id="allRecordsList">
-                <div class="empty-state"><span class="spinner"></span>
+                <div class="empty-state">
+                    <span class="spinner"></span>
                     <p>Fetching database...</p>
                 </div>
             </div>
         </div>
+
+        <!-- SEARCH PANEL -->
         <div class="panel admin-panel" id="panel-search">
             <div class="section-header">
                 <h2>Universal Search</h2>
                 <p>Search by Customer Name, Phone, or RMA ID</p>
             </div>
             <div class="form-group full">
-                <input type="text" id="adminSearchQuery" placeholder="Search anything..." onkeyup="filterRecords()">
+                <input type="text" id="adminSearchQuery" placeholder="Search anything..." onkeyup="filterRecords()" />
             </div>
-            <div id="searchResults" style="margin-top: 24px;"></div>
+            <div id="searchResults" style="margin-top: 24px"></div>
         </div>
+
+        <!-- MERGED SETTINGS PANEL (IMPORT/EXPORT FIXED) -->
         <div class="panel admin-panel" id="panel-setup">
+            <!-- CSV Management Section -->
             <div class="section-header">
-                <h2>Admin Configuration</h2>
-                <p>Internal system settings</p>
+                <h3>System Management</h3>
+                <p>Database Backup & Record Control</p>
             </div>
-            <div
-                style="background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center;">
-                <h3 style="font-size: 16px; color: var(--text); margin-bottom: 8px;">Store Branches</h3>
-                <p style="color: var(--text2); font-size: 14px; margin-bottom: 24px;">Active Branches: <strong>Badda,
-                        Multiplan, CTG</strong></p>
-                <button class="btn btn-secondary"
-                    onclick="showToast('Branch settings are hardcoded in the backend.', 'info')">Manage
-                    Branches</button>
+            <div class="stats-row">
+                <div class="stat-card">
+                    <button class="btn btn-secondary" style="width: 100%"
+                        onclick="window.location.href = '/api/admin/rma/export'">
+                        📥 Export CSV
+                    </button>
+                </div>
+                <div class="stat-card">
+                    <input type="file" id="csvFile" style="display: none" onchange="handleImport(this)" />
+                    <button class="btn btn-secondary" style="width: 100%"
+                        onclick="document.getElementById('csvFile').click()">
+                        📤 Import CSV
+                    </button>
+                </div>
             </div>
         </div>
     </main>
+
+    <!-- MODALS -->
     <div class="modal-overlay" id="adminModal">
         <div class="modal">
             <div class="modal-header">
@@ -110,21 +139,29 @@
             <div id="modalContent"></div>
         </div>
     </div>
+
     <div class="toast" id="toast"></div>
-    <div class="modal-overlay" id="customerModal" style="display: none;">
-        <div class="modal" style="max-width: 350px;">
+
+    <div class="modal-overlay" id="customerModal" style="display: none">
+        <div class="modal" style="max-width: 350px">
             <div class="modal-header">
                 <h3>Customer Details</h3>
-                <div class="close-btn" onclick="document.getElementById('customerModal').style.display='none'">✕</div>
+                <div class="close-btn" onclick="
+              document.getElementById('customerModal').style.display = 'none'
+            ">
+                    ✕
+                </div>
             </div>
-            <div id="customerModalContent">
-            </div>
-            <div style="text-align: center; margin-top: 15px;">
-                <p style="font-size: 12px; color: var(--text3);">Click any block to copy</p>
+            <div id="customerModalContent"></div>
+            <div style="text-align: center; margin-top: 15px">
+                <p style="font-size: 12px; color: var(--text3)">
+                    Click any block to copy
+                </p>
             </div>
         </div>
     </div>
-    <img id="pdf-bg" src="/static/images/tropology-bg.png" style="display: none;">
+
+    <img id="pdf-bg" src="{{ url_for('static', filename='images/tropology-bg.png') }}" style="display: none" />
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 

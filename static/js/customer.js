@@ -1,26 +1,16 @@
+// Updated for customer.js[cite: 7, 9]
 function switchTab(tabId, clickedButton) {
-  // 1. Move the blue highlight pill
+  // 1. Move highlight
   const allTabs = document.querySelectorAll(".tab-btn");
   allTabs.forEach((btn) => btn.classList.remove("active"));
+  if (clickedButton) clickedButton.classList.add("active");
 
-  if (clickedButton) {
-    clickedButton.classList.add("active");
-  }
+  // 2. Toggle Panels (Using 'active' class for CSS animations)
+  const panels = document.querySelectorAll(".panel");
+  panels.forEach((p) => p.classList.remove("active"));
 
-  // 2. Grab your forms using their exact IDs
-  const claimForm = document.getElementById("panel-new");
-
-  // NOTE: Check your HTML to make sure 'panel-track' is the exact ID of your tracking form!
-  const trackForm = document.getElementById("panel-track");
-
-  // 3. Swap the visibility
-  if (tabId === "new") {
-    if (claimForm) claimForm.style.display = "block";
-    if (trackForm) trackForm.style.display = "none";
-  } else {
-    if (claimForm) claimForm.style.display = "none";
-    if (trackForm) trackForm.style.display = "block";
-  }
+  const target = document.getElementById("panel-" + tabId);
+  if (target) target.classList.add("active");
 }
 
 function showToast(msg, type = "info") {

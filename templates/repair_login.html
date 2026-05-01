@@ -10,56 +10,27 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <script>
-        document.documentElement.setAttribute(
-            "data-theme",
-            localStorage.getItem("ez_theme") || "light",
-        );
+        document.documentElement.setAttribute("data-theme", localStorage.getItem("ez_theme") || "light");
     </script>
 </head>
 
-<body style="
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    ">
+<body style="display: flex; align-items: center; justify-content: center; height: 100vh;">
     <div class="panel active" style="text-align: center; max-width: 400px; margin: 20px">
-        <h2 style="
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 8px;
-        ">
-            WE REPAIR BD
-        </h2>
-        <p style="color: var(--text3); font-size: 13px; margin-bottom: 32px">
-            Technician Portal Login
-        </p>
+        <h2 style="font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px;">WE REPAIR BD</h2>
+        <p style="color: var(--text3); font-size: 13px; margin-bottom: 32px">Technician Portal Login</p>
         {% if error %}
-        <div style="
-        color: #ef4444;
-        font-size: 13px;
-        font-weight: 500;
-        margin-bottom: 20px;
-        border: 1px solid #ef4444;
-        padding: 10px;
-        border-radius: var(--radius);
-        ">
+        <div
+            style="color: #ef4444; font-size: 13px; font-weight: 500; margin-bottom: 20px; border: 1px solid #ef4444; padding: 10px; border-radius: var(--radius);">
             {{ error }}
         </div>
         {% endif %}
-        <form method="POST" action="/repair-login">
-            <input type="password" name="password" placeholder="••••••••" required autofocus style="
-            text-align: center;
-            font-size: 20px;
-            letter-spacing: 4px;
-            margin-bottom: 24px;
-            padding: 16px;
-        " />
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px">
-                Access Portal
-            </button>
+        <!-- UPDATED ACTION BELOW -->
+        <form method="POST" action="{{ url_for('repair.repair_login') }}">
+            <input type="password" name="password" placeholder="••••••••" required autofocus
+                style="text-align: center; font-size: 20px; letter-spacing: 4px; margin-bottom: 24px; padding: 16px;" />
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px">Access Portal</button>
         </form>
     </div>
 </body>
+
 </html>

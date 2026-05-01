@@ -188,7 +188,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 20px 80px;
+  padding: 32px 2.5% 80px; /* Reduced side padding to 2.5% */
   width: 100%;
 }
 
@@ -208,8 +208,9 @@ main {
   display: block;
 }
 .panel.admin-panel {
-  max-width: 900px;
-} /* Wider for admin tables */
+  max-width: 1400px; /* Increased from 900px[cite: 9] */
+  width: 95%; /* Ensures it scales on smaller desktops[cite: 9] */
+}
 
 @keyframes slideUp {
   from {
@@ -436,9 +437,9 @@ select option {
 
 .records-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
+  table-layout: auto; /* Allows columns to grow based on content[cite: 9] */
 }
+
 .records-table th {
   text-align: left;
   font-size: 12px;

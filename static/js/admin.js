@@ -17,9 +17,6 @@ function switchTab(tabId, clickedButton) {
   // 3. Show the target panel
   const target = document.getElementById("panel-" + tabId);
   if (target) target.classList.add("active");
-
-  // 4. Maintenance: On mobile, we forced #panel-search to display:block.
-  // This ensures if you are on desktop, the tab system still works normally.
 }
 
 async function loadAllData() {
@@ -44,12 +41,9 @@ async function loadAllData() {
 }
 
 function renderStats(records) {
-  // 1. Total Tickets (counts everything)
   document.getElementById("stat-total").innerText = records.length;
-  
-  // 2. Active Repairs (counts ONLY tickets with "Repair" in the status)
   document.getElementById("stat-pending").innerText = records.filter(
-    (r) => r.status && r.status.includes("Repair")
+    (r) => r.status && r.status.includes("Repair"),
   ).length;
 }
 
@@ -60,7 +54,6 @@ function renderTable(records, containerId) {
     return;
   }
 
-  // ADDED: The "Details" header column to keep alignment perfect
   let html = `<div style="overflow-x: auto;"><table class="records-table">
         <thead>
             <tr>
@@ -75,7 +68,9 @@ function renderTable(records, containerId) {
         <tbody>`;
 
   records.forEach((r) => {
-    // ADDED: The Eye Icon column with exact matching variables: r.customer_name and r.contact
+    // We escape the JSON string for the onclick attribute to prevent syntax errors
+    const rString = JSON.stringify(r).replace(/'/g, "&#39;");
+
     html += `
             <tr>
                 <td>
@@ -98,7 +93,10 @@ function renderTable(records, containerId) {
 
                 <td><span class="badge ${getStatusBadgeClass(r.status)}">${r.status}</span></td>
                 <td>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick='openAdminDetail(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Manage</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick='openAdminDetail(${rString})'>Manage</button>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; color: var(--accent3); border-color: var(--accent3);" onclick="deleteRecord('${r.rma_code}')">Delete</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -174,8 +172,9 @@ function openAdminDetail(r) {
             <div class="form-group">
                 <label>Repair Location</label>
                 <select id="upRepairLoc">
-                    <option value="In-House" ${r.repair_location === "In-House" ? "selected" : ""}>In-House</option>
-                    <option value="We Repair BD" ${r.repair_location === "We Repair BD" ? "selected" : ""}>We Repair BD</option>
+                      <option value="In-House (Badda)" ${r.repair_location === "In-House (Badda)" ? "selected" : ""}>🏠 In-House (Badda)</option>
+                      <option value="In-House (Multiplan)" ${r.repair_location === "In-House (Multiplan)" ? "selected" : ""}>🏢 In-House (Multiplan)</option>
+                      <option value="We Repair BD" ${r.repair_location === "We Repair BD" ? "selected" : ""}>🛠️ We Repair BD</option>
                 </select>
             </div>
             <div class="form-group full">
@@ -225,13 +224,14 @@ async function updateStatus(code) {
 function closeModal() {
   document.getElementById("adminModal").classList.remove("show");
 }
+
 function showToast(msg, type = "info") {
   const t = document.getElementById("toast");
   t.className = `toast ${type} show`;
   t.innerHTML = msg;
   setTimeout(() => t.classList.remove("show"), 3200);
 }
-// --- PDF Generation ---
+
 function printFromAdmin(r) {
   try {
     if (!window.jspdf) {
@@ -242,10 +242,8 @@ function printFromAdmin(r) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
-    // A4 paper size is 210mm x 297mm
     const bgImg = document.getElementById("pdf-bg");
     if (bgImg) {
-      // Stretches the image over the entire page
       doc.addImage(bgImg, "PNG", 0, 0, 210, 297);
     }
 
@@ -254,49 +252,38 @@ function printFromAdmin(r) {
       const rightCol = 110;
       const rightMargin = 190;
 
-      // 1. Header (Logo Image + Text + Subtitle)
       const logoImg = document.querySelector(".logo-area img");
       if (logoImg) {
-        // Draw just the lightning bolt icon (Width: 20, Height: 14)
         doc.addImage(logoImg, "PNG", leftCol, yOffset + 12, 20, 18);
       }
 
-      // Draw the bold "EzGadgets" text right next to the icon
       doc.setFont("helvetica", "bold");
       doc.setFontSize(26);
-      doc.setTextColor(0, 0, 0); // Solid black
+      doc.setTextColor(0, 0, 0);
       doc.text("EzGadgets", leftCol + 22, yOffset + 24);
 
-      // Draw the gray "WARRANTY RECEIPT" text below it
-      doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(130, 130, 130);
       doc.text("WARRANTY RECEIPT", leftCol, yOffset + 32);
 
-      // Office/Customer Copy Label
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
       doc.text(label.toUpperCase(), rightMargin, yOffset + 24, {
         align: "right",
       });
 
-      // Horizontal Divider
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.5);
       doc.line(leftCol, yOffset + 36, rightMargin, yOffset + 36);
 
-      // 2. Two-Column Layout (Customer Details vs RMA Details)
       const columnY = yOffset + 48;
 
-      // --- Left Column: Customer ---
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(0, 0, 0);
       doc.text("CUSTOMER DETAILS", leftCol + 10, columnY);
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(0, 0, 0);
       doc.text(
         `Name :      ${r.customer_name || "N/A"}`,
         leftCol,
@@ -310,18 +297,14 @@ function printFromAdmin(r) {
       );
       doc.text(addressLines, leftCol, columnY + 22);
 
-      // --- Vertical Divider ---
       doc.setDrawColor(180, 180, 180);
       doc.line(100, columnY - 2, 100, columnY + 35);
 
-      // --- Right Column: RMA ---
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.text("RMA DETAILS", rightCol + 10, columnY);
 
       doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      // Use bold for the labels, normal for the values to match the SVG exactly
       doc.setFont("helvetica", "bold");
       doc.text("RMA Code:", rightCol, columnY + 10);
       doc.setFont("helvetica", "normal");
@@ -347,49 +330,33 @@ function printFromAdmin(r) {
       doc.setFont("helvetica", "normal");
       doc.text(`${r.serial_number || "N/A"}`, rightCol + 8, columnY + 34);
 
-      // 3. Issue Description Box
       const boxY = columnY + 45;
-
-      doc.setFillColor(235, 235, 235); // Slightly darker gray to show over background
+      doc.setFillColor(235, 235, 235);
       doc.roundedRect(leftCol, boxY, 170, 25, 3, 3, "F");
 
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      doc.setFont("helvetica", "normal");
-      const cleanIssue = (r.issue || "No description provided").replace(
-        /[^\x00-\x7F]/g,
-        "",
+      const splitIssue = doc.splitTextToSize(
+        (r.issue || "No description provided").replace(/[^\x00-\x7F]/g, ""),
+        145,
       );
-      const splitIssue = doc.splitTextToSize(cleanIssue, 145);
-
       doc.text("ISSUE :  ", leftCol + 5, boxY + 8);
       doc.text(splitIssue, leftCol + 18, boxY + 8);
 
-      // 4. Signatures
       const sigY = boxY + 45;
       doc.setDrawColor(150, 150, 150);
       doc.setLineWidth(0.3);
-
       doc.line(leftCol, sigY, 70, sigY);
-      doc.setFontSize(8);
-      doc.setTextColor(0, 0, 0);
       doc.text("Customer Signature", leftCol, sigY + 5);
-
       doc.line(140, sigY, rightMargin, sigY);
       doc.text("Authorized Signatory", 140, sigY + 5);
     };
 
-    // Draw Office Copy
     drawSection(0, "OFFICE COPY");
-
-    // Draw Scissor / Cut Line
     doc.setDrawColor(180, 180, 180);
     doc.setLineDashPattern([2, 2], 0);
-    doc.setLineWidth(0.5);
     doc.line(10, 148, 200, 148);
     doc.setLineDashPattern([], 0);
-
-    // Draw Customer Copy
     drawSection(148, "CUSTOMER COPY");
 
     doc.save(`EZ-RMA-${r.rma_code}.pdf`);
@@ -399,54 +366,65 @@ function printFromAdmin(r) {
   }
 }
 
-// Opens the modal and injects the customer data
 function viewCustomer(name, phone, address) {
-  // replaces single quotes just in case a name has an apostrophe (like O'Connor)
-  const safeName = name ? name.replace(/'/g, "\\'") : "N/A";
-  const safePhone = phone ? phone.replace(/'/g, "\\'") : "N/A";
-  const safeAddress = address ? address.replace(/'/g, "\\'") : "N/A";
-
   const content = `
-        <div class="copy-block" onclick="copyText('${safeName}')" title="Copy Name">
-            <div>
-                <span class="copy-label">Name</span>
-                <span class="copy-value">${name || "N/A"}</span>
-            </div>
-            <span style="font-size: 16px;">📋</span>
+        <div class="copy-block" onclick="copyText('${name ? name.replace(/'/g, "\\'") : "N/A"}')">
+            <div><span class="copy-label">Name</span><span class="copy-value">${name || "N/A"}</span></div>
+            <span>📋</span>
         </div>
-        <div class="copy-block" onclick="copyText('${safePhone}')" title="Copy Phone">
-            <div>
-                <span class="copy-label">Phone</span>
-                <span class="copy-value">${phone || "N/A"}</span>
-            </div>
-            <span style="font-size: 16px;">📋</span>
+        <div class="copy-block" onclick="copyText('${phone ? phone.replace(/'/g, "\\'") : "N/A"}')">
+            <div><span class="copy-label">Phone</span><span class="copy-value">${phone || "N/A"}</span></div>
+            <span>📋</span>
         </div>
-        <div class="copy-block" onclick="copyText('${safeAddress}')" title="Copy Address">
-            <div>
-                <span class="copy-label">Address</span>
-                <span class="copy-value">${address || "N/A"}</span>
-            </div>
-            <span style="font-size: 16px;">📋</span>
-        </div>
-    `;
-
+        <div class="copy-block" onclick="copyText('${address ? address.replace(/'/g, "\\'") : "N/A"}')">
+            <div><span class="copy-label">Address</span><span class="copy-value">${address || "N/A"}</span></div>
+            <span>📋</span>
+        </div>`;
   document.getElementById("customerModalContent").innerHTML = content;
   document.getElementById("customerModal").style.display = "flex";
 }
 
-// Handles the actual clipboard copying
 function copyText(text) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      // If you have a toast notification system, it will use it. Otherwise, normal alert.
-      if (typeof showToast === "function") {
-        showToast("Copied: " + text, "success");
-      } else {
-        alert("Copied to clipboard!\n" + text);
-      }
-    })
-    .catch((err) => {
-      console.error("Failed to copy: ", err);
+  navigator.clipboard.writeText(text).then(() => {
+    showToast("Copied: " + text, "success");
+  });
+}
+
+async function deleteRecord(code) {
+  if (!confirm(`Permanently delete RMA ${code}? This cannot be undone.`))
+    return;
+
+  try {
+    const res = await fetch(`/api/admin/rma/delete/${code}`, {
+      method: "DELETE",
     });
+    if (res.ok) {
+      showToast("Record deleted", "success");
+      loadAllData();
+    }
+  } catch (e) {
+    showToast("Error deleting record", "error");
+  }
+}
+
+async function handleImport(input) {
+  if (!input.files[0]) return;
+  const formData = new FormData();
+  formData.append("file", input.files[0]);
+
+  showToast("Importing...", "info");
+  try {
+    const res = await fetch("/api/admin/rma/import", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Imported ${data.count} new records`, "success");
+      loadAllData();
+    }
+  } catch (e) {
+    showToast("Import failed", "error");
+  }
+  input.value = "";
 }

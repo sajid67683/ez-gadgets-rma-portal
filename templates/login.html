@@ -27,11 +27,13 @@
             {{ error }}
         </div>
         {% endif %}
-        <form method="POST" action="/login">
+        <!-- UPDATED ACTION BELOW -->
+        <form method="POST" action="{{ url_for('admin.login') }}">
             <input type="password" name="password" placeholder="••••••••" required autofocus
                 style="text-align: center; font-size: 20px; letter-spacing: 4px; margin-bottom: 24px; padding: 16px;">
             <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">Secure Login</button>
         </form>
     </div>
 </body>
+
 </html>
