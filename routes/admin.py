@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for, Response, make_response
 from werkzeug.security import check_password_hash
-from models import db, RMARecord, User
+from models import db  # Import our new MongoDB db object
+from datetime import datetime
 import requests
 import csv
 import io
@@ -17,8 +18,11 @@ GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ-m39N1lQ82y76-Kn
 def login():
     if request.method == 'POST':
         password = request.form.get('password')
-        user = User.query.filter_by(username='admin').first()
-        if user and check_password_hash(user.password_hash, password):
+        # 1. MongoDB user lookup
+        user = db.users.find_one({"username": "admin"})
+
+        # Access password_hash using dictionary keys
+        if user and check_password_hash(user["password_hash"], password):
             session['admin_logged_in'] = True
             return redirect(url_for('admin.admin_dashboard'))
         else:
@@ -45,35 +49,54 @@ def admin_dashboard():
 
 @admin_bp.route('/api/admin/rma/all', methods=['GET'])
 def get_all_rmas():
-    records = RMARecord.query.order_by(RMARecord.date_received.desc()).all()
+    # 2. MongoDB find() and sort()
+    records = list(db.records.find().sort("date_received", -1))
+
+    # Use .get() to safely grab dictionary values just in case a field is missing
     result = [{
-        "rma_code": r.rma_code, "customer_name": r.customer_name,
-        "contact": r.contact, "address": r.address, "product_name": r.product_name,
-        "serial_number": r.serial_number, "issue": r.issue, "status": r.status,
-        "location": r.location, "repair_location": r.repair_location,
-        "admin_notes": r.admin_notes, "date": r.date_received.strftime("%d/%m/%Y")
+        "rma_code": r["rma_code"], "customer_name": r["customer_name"],
+        "contact": r["contact"], "address": r.get("address", ""), "product_name": r["product_name"],
+        "serial_number": r.get("serial_number", ""), "issue": r["issue"], "status": r["status"],
+        "location": r["location"], "repair_location": r.get("repair_location", ""),
+        "admin_notes": r.get("admin_notes", ""), "date": r["date_received"].strftime("%d/%m/%Y")
     } for r in records]
+
     return jsonify({"success": True, "records": result})
 
 
 @admin_bp.route('/api/admin/rma/update', methods=['POST'])
 def update_rma():
     data = request.json
-    record = RMARecord.query.filter_by(rma_code=data.get('rma_code')).first()
+
+    # 3. Find record in MongoDB
+    record = db.records.find_one({"rma_code": data.get('rma_code')})
+
     if record:
-        record.status = data.get('status', record.status)
-        record.repair_location = data.get(
-            'repair_location', record.repair_location)
-        record.admin_notes = data.get('admin_notes', record.admin_notes)
-        db.session.commit()
+        new_status = data.get('status', record.get('status'))
+        new_repair_loc = data.get(
+            'repair_location', record.get('repair_location'))
+        new_notes = data.get('admin_notes', record.get('admin_notes'))
+
+        # 4. Use update_one instead of db.session.commit()
+        db.records.update_one(
+            {"rma_code": record["rma_code"]},
+            {"$set": {
+                "status": new_status,
+                "repair_location": new_repair_loc,
+                "admin_notes": new_notes
+            }}
+        )
+
         try:
             requests.get(GOOGLE_SCRIPT_URL, params={
-                'action': 'update', 'rma_code': record.rma_code,
-                'status': record.status, 'notes': record.admin_notes
+                'action': 'update', 'rma_code': record["rma_code"],
+                'status': new_status, 'notes': new_notes
             }, timeout=5)
         except Exception as e:
             print(f"Google Update Error: {e}")
+
         return jsonify({"success": True})
+
     return jsonify({"success": False, "error": "Record not found."}), 404
 
 # ==========================================
@@ -83,22 +106,22 @@ def update_rma():
 
 @admin_bp.route('/api/admin/rma/export', methods=['GET'])
 def export_rmas():
-    """Exports all database records as a CSV file."""
     if not session.get('admin_logged_in'):
         return jsonify({"success": False}), 401
 
-    records = RMARecord.query.all()
+    records = db.records.find()
     si = io.StringIO()
     cw = csv.writer(si)
 
-    # Header row
     cw.writerow(['RMA Code', 'Location', 'Customer', 'Contact', 'Address',
                 'Product', 'S/N', 'Issue', 'Status', 'Repair Loc', 'Notes'])
 
     for r in records:
         cw.writerow([
-            r.rma_code, r.location, r.customer_name, r.contact, r.address,
-            r.product_name, r.serial_number, r.issue, r.status, r.repair_location, r.admin_notes
+            r.get("rma_code"), r.get("location"), r.get(
+                "customer_name"), r.get("contact"), r.get("address"),
+            r.get("product_name"), r.get("serial_number"), r.get("issue"), r.get(
+                "status"), r.get("repair_location"), r.get("admin_notes")
         ])
 
     output = make_response(si.getvalue())
@@ -109,7 +132,6 @@ def export_rmas():
 
 @admin_bp.route('/api/admin/rma/import', methods=['POST'])
 def import_rmas():
-    """Imports CSV data with strict duplicate checking (all fields must match to skip)."""
     if not session.get('admin_logged_in'):
         return jsonify({"success": False}), 401
 
@@ -117,56 +139,48 @@ def import_rmas():
     if not file:
         return jsonify({"success": False, "error": "No file provided"}), 400
 
-    stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+    stream = io.StringIO(file.stream.read().decode("utf-8-sig"), newline=None)
     csv_input = csv.DictReader(stream)
     imported_count = 0
 
     for row in csv_input:
-        # Strict Duplicate Check: Skip ONLY if every piece of info is exactly identical[cite: 1]
-        is_duplicate = RMARecord.query.filter_by(
-            rma_code=row['RMA Code'],
-            location=row['Location'],
-            customer_name=row['Customer'],
-            contact=row['Contact'],
-            address=row['Address'],
-            product_name=row['Product'],
-            serial_number=row['S/N'],
-            issue=row['Issue'],
-            status=row['Status'],
-            repair_location=row['Repair Loc'],
-            admin_notes=row['Notes']
-        ).first()
+        # Map CSV columns directly to your database fields
+        rma_code = row.get('RMA Code')
+        if not rma_code:
+            continue
 
-        if not is_duplicate:
-            new_record = RMARecord(
-                rma_code=row['RMA Code'],
-                location=row['Location'],
-                customer_name=row['Customer'],
-                contact=row['Contact'],
-                address=row['Address'],
-                product_name=row['Product'],
-                serial_number=row['S/N'],
-                issue=row['Issue'],
-                status=row['Status'],
-                repair_location=row['Repair Loc'],
-                admin_notes=row['Notes']
-            )
-            db.session.add(new_record)
+        # Prevent duplicates
+        if not db.records.find_one({"rma_code": rma_code}):
+            db.records.insert_one({
+                "rma_code": rma_code,
+                "location": row.get('Branch', ''),
+                "customer_name": row.get('Name', ''),
+                "contact": row.get('Number', ''),
+                # Note: CSV uses 'Adress' (typo in source)
+                "address": row.get('Adress', ''),
+                "product_name": row.get('Product Name', ''),
+                "serial_number": row.get('Code', ''),
+                "issue": row.get('Issue', ''),
+                "status": row.get('Status', 'Pending Drop-off'),
+                "repair_location": "In-House",  # Default as it's missing in CSV
+                "admin_notes": row.get('Notes', ''),
+                "date_received": datetime.utcnow()
+            })
             imported_count += 1
 
-    db.session.commit()
     return jsonify({"success": True, "count": imported_count})
 
 
 @admin_bp.route('/api/admin/rma/delete/<code>', methods=['DELETE'])
 def delete_rma(code):
-    """Permanently deletes a specific RMA record."""
     if not session.get('admin_logged_in'):
         return jsonify({"success": False}), 401
 
-    record = RMARecord.query.filter_by(rma_code=code).first()
-    if record:
-        db.session.delete(record)
-        db.session.commit()
+    # 6. MongoDB delete_one() instead of db.session.delete()
+    result = db.records.delete_one({"rma_code": code})
+
+    # Check if a document was actually deleted
+    if result.deleted_count > 0:
         return jsonify({"success": True})
+
     return jsonify({"success": False, "error": "Record not found."}), 404

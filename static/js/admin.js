@@ -409,22 +409,37 @@ async function deleteRecord(code) {
 
 async function handleImport(input) {
   if (!input.files[0]) return;
+
   const formData = new FormData();
   formData.append("file", input.files[0]);
 
-  showToast("Importing...", "info");
+  // 1. Lock the button and show a loading spinner
+  const uploadBtn = input.nextElementSibling;
+  const originalText = uploadBtn.innerHTML;
+  uploadBtn.innerHTML = '<span class="spinner" style="display:inline-block; margin-right:8px; width:14px; height:14px; border-color:white; border-bottom-color:transparent;"></span> Processing Data...';
+  uploadBtn.disabled = true;
+
+  showToast("Reading file and importing data...", "info");
+
   try {
     const res = await fetch("/api/admin/rma/import", {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
+
     if (data.success) {
-      showToast(`Imported ${data.count} new records`, "success");
+      showToast(`Successfully imported ${data.count} records!`, "success");
       loadAllData();
+    } else {
+      showToast("Import failed: " + (data.error || "Unknown error"), "error");
     }
   } catch (e) {
-    showToast("Import failed", "error");
+    showToast("Import connection error", "error");
   }
+
+  // 2. Restore the button after completion
+  uploadBtn.innerHTML = originalText;
+  uploadBtn.disabled = false;
   input.value = "";
 }

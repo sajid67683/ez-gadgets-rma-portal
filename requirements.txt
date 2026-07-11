@@ -1,6 +1,5 @@
-flask
-flask-sqlalchemy
+Flask
+pymongo
+dnspython
 requests
-gunicorn
-psycopg2-binary
 python-dotenv

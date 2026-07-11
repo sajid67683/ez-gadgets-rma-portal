@@ -1,27 +1,29 @@
-from app import app, db, User
+import os
 from werkzeug.security import generate_password_hash
+from pymongo import MongoClient
+from dotenv import load_dotenv
 
-with app.app_context():
-    # 1. Create the new User table in your database
-    db.create_all()
-    
-    # 2. Check if admin exists, if not, create them
-    if not User.query.filter_by(username='admin').first():
-        admin_user = User(
-            username='admin', 
-            password_hash=generate_password_hash('ezadmin123'), 
-            role='admin'
-        )
-        db.session.add(admin_user)
-        
-    # 3. Check if tech exists, if not, create them
-    if not User.query.filter_by(username='tech').first():
-        tech_user = User(
-            username='tech', 
-            password_hash=generate_password_hash('werepair123'), 
-            role='tech'
-        )
-        db.session.add(tech_user)
-        
-    db.session.commit()
-    print("✅ Secure users created successfully!")
+# 1. Load the connection string from your .env file
+load_dotenv()
+MONGO_URI = os.getenv("MONGO_URI")
+
+# 2. Connect to MongoDB
+client = MongoClient(MONGO_URI)
+db = client.ezgadgets_rma
+
+# Optional: Clear out any old users if you run this multiple times
+db.users.delete_many({})
+
+# 3. Create Admin User
+db.users.insert_one({
+    "username": "admin",
+    "password_hash": generate_password_hash("ezadmin123")
+})
+
+# 4. Create Tech User
+db.users.insert_one({
+    "username": "tech",
+    "password_hash": generate_password_hash("werepair123")
+})
+
+print("Users successfully created in MongoDB!")

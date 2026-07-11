@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template
-from models import db, RMARecord
+from models import db  # Import our new MongoDB db object. No more RMARecord!
 from datetime import datetime
 import random
 import string
@@ -9,52 +9,80 @@ import os
 customer_bp = Blueprint('customer', __name__)
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ-m39N1lQ82y76-KnTGj5dxL4mWbsHULFcAvHRv-rBKctYKlverRDLzVRPhSTuqCi4g/exec"
 
+
 def generate_rma_code(location):
-    if "Badda" in location: prefix = "EZ-BDA"
-    elif "Multiplan" in location: prefix = "EZ-MLT"
-    else: prefix = "EZ-CTG"
+    if "Badda" in location:
+        prefix = "EZ-BDA"
+    elif "Multiplan" in location:
+        prefix = "EZ-MLT"
+    else:
+        prefix = "EZ-CTG"
     date_str = datetime.now().strftime("%y%m%d")
-    random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    random_chars = ''.join(random.choices(
+        string.ascii_uppercase + string.digits, k=4))
     return f"{prefix}-{date_str}-{random_chars}"
+
 
 @customer_bp.route('/')
 def customer_portal():
     return render_template('customer.html')
+
 
 @customer_bp.route('/api/rma/create', methods=['POST'])
 def create_rma():
     data = request.json
     branch_location = data.get('location', 'CTG Branch')
     new_code = generate_rma_code(branch_location)
-    
-    new_rma = RMARecord(
-        rma_code=new_code, location=branch_location,
-        customer_name=data.get('customerName'), contact=data.get('contact'),
-        address=data.get('address'), product_name=data.get('productName'),
-        serial_number=data.get('serialNumber'), issue=data.get('issue')
-    )
+
+    # 1. Create a Python dictionary instead of an SQLAlchemy Object
+    # We must manually set the default values that SQL used to handle
+    new_rma = {
+        "rma_code": new_code,
+        "location": branch_location,
+        "customer_name": data.get('customerName'),
+        "contact": data.get('contact'),
+        "address": data.get('address'),
+        "product_name": data.get('productName'),
+        "serial_number": data.get('serialNumber'),
+        "issue": data.get('issue'),
+        "status": "Pending Drop-off",
+        "repair_location": "In-House",
+        "admin_notes": "",
+        "date_received": datetime.utcnow()
+    }
+
     try:
-        db.session.add(new_rma)
-        db.session.commit()
+        # 2. Insert into the MongoDB collection named 'records'
+        db.records.insert_one(new_rma)
+
+        # 3. Sync to Google Sheets using dictionary brackets ["key"] instead of object dots (.key)
         requests.get(GOOGLE_SCRIPT_URL, params={
             'action': 'add', 'rma_code': new_code, 'date': datetime.now().strftime("%d/%m/%Y"),
-            'location': new_rma.location, 'customerName': new_rma.customer_name,
-            'contact': new_rma.contact, 'productName': new_rma.product_name,
-            'serialNumber': new_rma.serial_number, 'issue': new_rma.issue,
-            'address': new_rma.address
+            'location': new_rma["location"], 'customerName': new_rma["customer_name"],
+            'contact': new_rma["contact"], 'productName': new_rma["product_name"],
+            'serialNumber': new_rma["serial_number"], 'issue': new_rma["issue"],
+            'address': new_rma["address"]
         }, timeout=5)
+
         return jsonify({"success": True, "rma_code": new_code})
+
     except Exception as e:
-        db.session.rollback()
+        print(f"Error: {e}")
         return jsonify({"success": False, "error": "Database or Sync failed."}), 500
+
 
 @customer_bp.route('/api/rma/status/<code>', methods=['GET'])
 def check_status(code):
-    record = RMARecord.query.filter_by(rma_code=code).first()
+    # 4. Use MongoDB find_one instead of SQLAlchemy query
+    record = db.records.find_one({"rma_code": code})
+
     if record:
         return jsonify({
-            "success": True, "rma_code": record.rma_code,
-            "product_name": record.product_name, "status": record.status,
-            "date_received": record.date_received.strftime("%d %b %Y")
+            "success": True,
+            "rma_code": record["rma_code"],
+            "product_name": record["product_name"],
+            "status": record["status"],
+            "date_received": record["date_received"].strftime("%d %b %Y")
         })
+
     return jsonify({"success": False, "error": "RMA not found."}), 404
