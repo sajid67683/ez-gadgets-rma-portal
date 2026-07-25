@@ -1,22 +1,27 @@
-# --- PROJECT SPECIFIC (CRITICAL) ---
+# --- CRITICAL (SECURITY) ---
 .env
 .envrc
-instance/
-*.db
+.flaskenv
+
+# --- PYTHON & FLASK ---
 venv/
 env/
 __pycache__/
-
-# --- FLASK & PYTHON CRUFT ---
 *.pyc
 *.pyo
 *.pyd
-.webassets-cache
 .pytest_cache/
 .coverage
 htmlcov/
+*.egg-info/
 
-# --- EDITORS & OS ---
+# --- DATABASE & STORAGE ---
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# --- VIRTUAL ENVIRONMENT & OS ---
 .vscode/
 .idea/
 .DS_Store
@@ -24,7 +29,7 @@ Thumbs.db
 *.manifest
 *.spec
 
-# --- DISTRIBUTION ---
+# --- DISTRIBUTION & LOGS ---
 build/
 develop-eggs/
 dist/
@@ -37,8 +42,5 @@ parts/
 sdist/
 var/
 wheels/
-*.egg-info/
-
-# --- LOGS ---
 *.log
 pip-log.txt
